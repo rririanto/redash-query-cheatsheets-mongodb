@@ -1,4 +1,4 @@
-## Query cheatseat redash.io
+## Query cheatsheet redash.io
 
 First let's assume we have this data structure
 
@@ -235,7 +235,7 @@ We could also add $match filter to show data from data range
 ```
 
 ### Today and Yesterday Signup
-We can use $facet to create multi-faceted aggregations which characterize data across multiple dimensions within a single aggregation stage. So first we will aggregate today signup and yesterday signup then combine the data by Adds new fields to documents using $addfield 
+We can use $facet to create multi-faceted aggregations that characterize data across multiple dimensions within a single aggregation stage. So first we will aggregate today signup and yesterday signup then combine the data by adds new fields to documents using $addfield 
 
 ```
 {
@@ -318,5 +318,7 @@ We can use $facet to create multi-faceted aggregations which characterize data a
 }
 
 ```
+
+
 
 
