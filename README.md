@@ -1,4 +1,4 @@
-## Query cheatsheet redash.io mongodb for SaaS Metrics
+## Query cheatsheet redash.io mongodb for User Metrics
 
 First let's assume we have this data structure
 
