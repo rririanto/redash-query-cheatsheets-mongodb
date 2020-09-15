@@ -29,16 +29,6 @@ user_subscriptions >
   subscription.cend
   subscription.quantity
 
-streams >
-  _id
-  creationTime
-  enabled
-  key
-  lastUpdated
-  name
-  platforms
-  user
-
 users >
   _id
   email
