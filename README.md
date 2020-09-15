@@ -169,10 +169,10 @@ To show monthly sign up we need to aggregate and constructs a date to get the la
 Output example
 ```
 count   _id 
-5000	30/09/20
-4000	31/08/20	
-3000	31/07/20	
-2000	30/06/20	
+5000	  30/09/20
+4000	  31/08/20	
+3000	  31/07/20	
+2000	  30/06/20	
 ```
 
 ### Monthly Signup with date range. 
@@ -356,8 +356,9 @@ output
 3000	categoryC
 4000	categoryD
 ```
+
 ### Monthly Revenue
-As you can see from the structure of our collection at the top, We had embedded array documents which are called "addonSubscriptions". Its additional subscription documents related to subscription_packages, it's a document for users who had many types of the subscription package. And also we have a "subscription." which our main subscription package. so if we want to calculate the revenue, we need to look up to "subscription_packages" collections and Performs a left outer join in the same database to filter in documents from the "joined" collection for processing ($lookup). after that we deconstruct ($unwind) an array field from both to do the calculation from both "subscription." and addonSubscriptions".
+As you can see from the structure of our collection at the top, We had embedded array documents which are called "addonSubscriptions". Its additional subscription documents related to subscription_packages, it's a document for users who had many types of the subscription package. And also we have a "subscription." which our main subscription package. so if we want to calculate the revenue, we need to look up to "subscription_packages" collections and performs a left outer join in the same database to filter in documents from the "joined" collection for processing ($lookup). after that we deconstruct ($unwind) an array field from both to do the calculation from both "subscription." and addonSubscriptions".
 
 ```
 
@@ -468,13 +469,13 @@ The output will be
 ```
 Total       ID
 $50000	    31/05/20 00:00	
-$40000  	30/04/19 00:00	
+$40000  	  30/04/19 00:00	
 $30000	    31/10/18 00:00	
-$20000  	31/01/20 00:00
+$20000  	  31/01/20 00:00
 ```
 
 ### Total Revenue
-To calculate total of all revenue, it's quite similar like what we use when calculating monthly revenue, we can just use $sum and grouping all of together. $addFields use to adds new fields to documents.
+To calculate total of all revenue, it's quite similar like what we use when calculating monthly revenue, we can just use $sum and grouping all of together. $addFields use to adds new fields to documents to have total for all revenue. 
 
 ```
 {
@@ -564,12 +565,12 @@ To calculate total of all revenue, it's quite similar like what we use when calc
 Output
 
 ```
-totalAllRevenue	_id	total_addons_revenue	total_base_revenue	
-1,000,000           500,000                     500,000 
+totalAllRevenue	_id	 total_addons_revenue	 total_base_revenue	
+1,000,000            500,000               500,000 
 ```
 
 ### Total Active customers
-
+We simply sum group from total_addons_user and total_base_user and to define active we need to make sure that the expire/end date greater than today. and then we add results both of them in total_active_user
 ```
 {
     "collection": "user_subscriptions",
@@ -653,9 +654,7 @@ totalAllRevenue	_id	total_addons_revenue	total_base_revenue
             }
         },
         {
-            "$project": {
-                "total_base_user": 1,
-                "total_addons_user": 1,
+            "$addFields": {
                 "total_active_user": {
                     "$add": [
                         "$total_base_user",
@@ -666,11 +665,12 @@ totalAllRevenue	_id	total_addons_revenue	total_base_revenue
         }
     ]
 }
+
 ```
 Output
 ```
-total_base_user	total_active_user	total_addons_user	
-500              11,00                600
+total_base_user	 total_active_user	 total_addons_user	
+500              11,00               600
 ```
 
 ## To do
