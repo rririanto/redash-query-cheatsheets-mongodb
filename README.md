@@ -341,6 +341,7 @@ The subscription category is located on addonSubscriptions documents. To be able
 output
 
 ```
+count   id
 1000	categoryA
 2000	categoryB
 3000	categoryC
@@ -459,9 +460,9 @@ The output will be
 ```
 Total       ID
 $50000	    31/05/20 00:00	
-$40000  	  30/04/19 00:00	
+$40000  	30/04/19 00:00	
 $30000	    31/10/18 00:00	
-$20000  	  31/01/20 00:00
+$20000  	31/01/20 00:00
 ```
 
 ### Total Revenue
@@ -556,7 +557,7 @@ Output
 
 ```
 totalAllRevenue	_id	 total_addons_revenue	 total_base_revenue	
-1,000,000            500,000               500,000 
+1,000,000            500,000                 500,000 
 ```
 
 ### Total Active customers
@@ -858,7 +859,7 @@ Sample Output
 ```
 _id	          trial_canceled	registered	paid_subscribed	
 2020-10-31	    30		           200	        40 
-2020-09-30 	    40	             100	        10	
+2020-09-30 	    40	               100	        10	
 ...
 ```
 
@@ -1212,8 +1213,8 @@ Example output
 ```
 monthly_active_trial_subscribe	_id	        monthly_signup	monthly_active_users	monthly_active_addons_user
 100	                            2020-09-30	500             1000	                1000
-2000	                          2020-08-31	5000	          10000	                11000
-1000	                          2020-07-31	6000	          7000	                4000
+2000	                        2020-08-31	5000	        10000	                11000
+1000	                        2020-07-31	6000	        7000	                4000
 ```
 
 ### ARPU: monthly include MRR
@@ -1528,11 +1529,11 @@ monthly_active_trial_subscribe	_id	        monthly_signup	monthly_active_users	m
 Example output:
 
 ```
-arpu	  _id	        accounts	    mrr
+arpu	  _id	          accounts	    mrr
 
-6.38	  30/09/20	  5000     	30000	
-2.97    31/08/20		10000	    29000	
-3.72    31/07/20	  6000     	27000	
+6.38	  30/09/20	      5000          30000	
+2.97      31/08/20		  10000         29000	
+3.72      31/07/20	      6000     	    27000	
 
 ```
 
