@@ -872,4 +872,666 @@ _id	          trial_canceled	registered	paid_subscribed
 ...
 ```
 
+### Trial to Buy Conversion %
+### To do
+
+### Customer Acquisition Cost
+```
+{
+    "collection": "user_subscriptions",
+    "aggregate": [
+        {
+            "$facet": {
+                "last_month": [
+                    {
+                        "$match": {
+                            "addonSubscriptions.0": {
+                                "$exists": true
+                            }
+                        }
+                    },
+                    {
+                        "$unwind": {
+                            "path": "$addonSubscriptions",
+                            "preserveNullAndEmptyArrays": false
+                        }
+                    },
+                    {
+                        "$match": {
+                            "addonSubscriptions.cstart": {
+                                "$gte": {
+                                    "$humanTime": "60 days ago 00:00"
+                                },
+                                "$lte": {
+                                    "$humanTime": "30 days ago 00:00"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": null,
+                            "count_paid_lastmonth": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ],
+                "this_month": [
+                    {
+                        "$match": {
+                            "addonSubscriptions.0": {
+                                "$exists": true
+                            }
+                        }
+                    },
+                    {
+                        "$unwind": {
+                            "path": "$addonSubscriptions",
+                            "preserveNullAndEmptyArrays": false
+                        }
+                    },
+                    {
+                        "$match": {
+                            "addonSubscriptions.cstart": {
+                                "$gte": {
+                                    "$humanTime": "30 days ago 00:00"
+                                },
+                                "$lte": {
+                                    "$humanTime": "today 00:00"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": null,
+                            "count_paid_this_month": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "paid_last_month": {
+                    "$arrayElemAt": [
+                        "$last_month.count_paid_lastmonth",
+                        0
+                    ]
+                },
+                "paid_this_month": {
+                    "$arrayElemAt": [
+                        "$this_month.count_paid_this_month",
+                        0
+                    ]
+                }
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "paid_this_month": 1,
+                "paid_last_month": 1,
+                "cac_last_month": {
+                    "$divide": [
+                        {{ expenses_last_month }},
+                        "$paid_last_month"
+                    ]
+                },
+                "cac_this_month": {
+                    "$divide": [
+                        {{ expenses_this_month }},
+                        "$paid_this_month"
+                    ]
+                }
+            }
+        }
+    ]
+}
+```
+
+Example output
+```
+paid_last_month	  cac_last_month	cac_this_month	paid_this_month	
+4207	               3,8	         1,04           2217	
+```
+
+### Monthly active users: sign up, addons user, trial subscription
+
+```
+{
+    "collection": "user_subscriptions",
+    "aggregate": [
+        {
+            "$facet": {
+                "monthly_signup": [
+                    {
+                        "$lookup": {
+                            "from": "users",
+                            "localField": "user",
+                            "foreignField": "_id",
+                            "as": "users"
+                        }
+                    },
+                    {
+                        "$unwind": {
+                            "path": "$users",
+                            "preserveNullAndEmptyArrays": false
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$users.joinDate"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$users.joinDate"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "monthly_signup": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ],
+                "monthly_active_trial_subscribe": [
+                    {
+                        "$match": {
+                            "addonSubscriptions.0": {
+                                "$exists": false
+                            }
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$subscription.cstart"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$subscription.cstart"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "monthly_active_trial_subscribe": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ],
+                "monthly_active_addons_user": [
+                    {
+                        "$match": {
+                            "addonSubscriptions.0": {
+                                "$exists": true
+                            }
+                        }
+                    },
+                    {
+                        "$unwind": {
+                            "path": "$addonSubscriptions",
+                            "preserveNullAndEmptyArrays": false
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$addonSubscriptions.cstart"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$addonSubscriptions.cstart"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "monthly_active_addons_user": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "$project": {
+                "activity": {
+                    "$setUnion": [
+                        "$monthly_signup",
+                        "$monthly_active_trial_subscribe",
+                        "$monthly_active_addons_user"
+                    ]
+                }
+            }
+        },
+        {
+            "$unwind": "$activity"
+        },
+        {
+            "$group": {
+                "_id": "$activity._id",
+                "details": {
+                    "$push": "$$ROOT"
+                }
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "monthly_signup": {
+                    "$arrayElemAt": [
+                        "$details.activity.monthly_signup",
+                        0
+                    ]
+                },
+                "monthly_active_trial_subscribe": {
+                    "$arrayElemAt": [
+                        "$details.activity.monthly_active_trial_subscribe",
+                        0
+                    ]
+                },
+                "monthly_active_addons_user": {
+                    "$arrayElemAt": [
+                        "$details.activity.monthly_active_addons_user",
+                        0
+                    ]
+                }
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "monthly_signup": 1,
+                "monthly_active_trial_subscribe": 1,
+                "monthly_active_addons_user": 1,
+                "monthly_active_users": {
+                    "$add": [
+                        "$monthly_active_trial_subscribe",
+                        "$monthly_active_addons_user"
+                    ]
+                }
+            }
+        },
+        {
+            "$sort": [
+                {
+                    "name": "_id",
+                    "direction": -1
+                }
+            ]
+        }
+    ]
+}
+```
+
+Example output
+
+```
+monthly_active_trial_subscribe	_id	        monthly_signup	monthly_active_users	monthly_active_addons_user
+100	                            2020-09-30	500             1000	                1000
+2000	                          2020-08-31	5000	          10000	                11000
+1000	                          2020-07-31	6000	          7000	                4000
+```
+
+### ARPU: monthly include MRR
+
+```
+{
+    "collection": "user_subscriptions",
+    "aggregate": [
+        {
+            "$facet": {
+                "revenue_from_subscription": [
+                    {
+                        "$match": {
+                            "addonSubscriptions.0": {
+                                "$exists": false
+                            }
+                        }
+                    },
+                    {
+                        "$lookup": {
+                            "from": "subscription_packages",
+                            "localField": "subscription.package",
+                            "foreignField": "_id",
+                            "as": "base_subscription"
+                        }
+                    },
+                    {
+                        "$unwind": {
+                            "path": "$base_subscription",
+                            "preserveNullAndEmptyArrays": false
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$subscription.cstart"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$subscription.cstart"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            },
+                            "total_price": {
+                                "$multiply": [
+                                    "$subscription.quantity",
+                                    "$base_subscription.baseCharge"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "total_revenue": {
+                                "$sum": "$total_price"
+                            }
+                        }
+                    }
+                ],
+                "revenue_from_addons": [
+                    {
+                        "$match": {
+                            "addonSubscriptions.0": {
+                                "$exists": true
+                            }
+                        }
+                    },
+                    {
+                        "$unwind": {
+                            "path": "$addonSubscriptions",
+                            "preserveNullAndEmptyArrays": false
+                        }
+                    },
+                    {
+                        "$lookup": {
+                            "from": "subscription_packages",
+                            "localField": "addonSubscriptions.package",
+                            "foreignField": "_id",
+                            "as": "addons_subscription"
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$addonSubscriptions.cstart"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$addonSubscriptions.cstart"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            },
+                            "total_price": {
+                                "$multiply": [
+                                    {
+                                        "$arrayElemAt": [
+                                            "$addons_subscription.baseCharge",
+                                            0
+                                        ]
+                                    },
+                                    "$addonSubscriptions.quantity"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "total_revenue": {
+                                "$sum": "$total_price"
+                            }
+                        }
+                    }
+                ],
+                "active_users": [
+                    {
+                        "$match": {
+                            "addonSubscriptions.0": {
+                                "$exists": false
+                            }
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$subscription.cstart"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$subscription.cstart"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "total_active": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ],
+                "active_addons_users": [
+                    {
+                        "$match": {
+                            "addonSubscriptions.0": {
+                                "$exists": true
+                            }
+                        }
+                    },
+                    {
+                        "$unwind": {
+                            "path": "$addonSubscriptions",
+                            "preserveNullAndEmptyArrays": false
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$addonSubscriptions.cstart"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$addonSubscriptions.cstart"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "total_active": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "$project": {
+                "activity": {
+                    "$setUnion": [
+                        "$revenue_from_subscription",
+                        "$revenue_from_addons",
+                        "$active_users",
+                        "$active_addons_users"
+                    ]
+                }
+            }
+        },
+        {
+            "$unwind": "$activity"
+        },
+        {
+            "$group": {
+                "_id": "$activity._id",
+                "details": {
+                    "$push": "$$ROOT"
+                }
+            }
+        },
+        {
+            "$project": {
+                "mrr": {
+                    "$add": [
+                        {
+                            "$arrayElemAt": [
+                                "$details.activity.total_revenue",
+                                0
+                            ]
+                        },
+                        {
+                            "$arrayElemAt": [
+                                "$details.activity.total_revenue",
+                                0
+                            ]
+                        }
+                    ]
+                },
+                "accounts": {
+                    "$add": [
+                        {
+                            "$arrayElemAt": [
+                                "$details.activity.total_active",
+                                0
+                            ]
+                        },
+                        {
+                            "$arrayElemAt": [
+                                "$details.activity.total_active",
+                                0
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "mrr": 1,
+                "accounts": 1,
+                "arpu": {
+                    "$divide": [
+                        "$mrr",
+                        "$accounts"
+                    ]
+                }
+            }
+        },
+        {
+            "$sort": [
+                {
+                    "name": "_id",
+                    "direction": -1
+                }
+            ]
+        }
+    ]
+}
+```
 ## To do
