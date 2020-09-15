@@ -1279,7 +1279,7 @@ monthly_active_trial_subscribe	_id	        monthly_signup	monthly_active_users	m
                     {
                         "$group": {
                             "_id": "$monthly",
-                            "total_revenue": {
+                            "total_base_revenue": {
                                 "$sum": "$total_price"
                             }
                         }
@@ -1345,7 +1345,7 @@ monthly_active_trial_subscribe	_id	        monthly_signup	monthly_active_users	m
                     {
                         "$group": {
                             "_id": "$monthly",
-                            "total_revenue": {
+                            "total_addons_revenue": {
                                 "$sum": "$total_price"
                             }
                         }
@@ -1386,7 +1386,7 @@ monthly_active_trial_subscribe	_id	        monthly_signup	monthly_active_users	m
                     {
                         "$group": {
                             "_id": "$monthly",
-                            "total_active": {
+                            "total_base_active": {
                                 "$sum": 1
                             }
                         }
@@ -1433,7 +1433,7 @@ monthly_active_trial_subscribe	_id	        monthly_signup	monthly_active_users	m
                     {
                         "$group": {
                             "_id": "$monthly",
-                            "total_active": {
+                            "total_addons_active": {
                                 "$sum": 1
                             }
                         }
@@ -1470,13 +1470,13 @@ monthly_active_trial_subscribe	_id	        monthly_signup	monthly_active_users	m
                     "$add": [
                         {
                             "$arrayElemAt": [
-                                "$details.activity.total_revenue",
+                                "$details.activity.total_base_revenue",
                                 0
                             ]
                         },
                         {
                             "$arrayElemAt": [
-                                "$details.activity.total_revenue",
+                                "$details.activity.total_addons_revenue",
                                 0
                             ]
                         }
@@ -1486,13 +1486,13 @@ monthly_active_trial_subscribe	_id	        monthly_signup	monthly_active_users	m
                     "$add": [
                         {
                             "$arrayElemAt": [
-                                "$details.activity.total_active",
+                                "$details.activity.total_base_active",
                                 0
                             ]
                         },
                         {
                             "$arrayElemAt": [
-                                "$details.activity.total_active",
+                                "$details.activity.total_addons_active",
                                 0
                             ]
                         }
@@ -1524,4 +1524,19 @@ monthly_active_trial_subscribe	_id	        monthly_signup	monthly_active_users	m
     ]
 }
 ```
+
+Example output:
+
+```
+arpu	  _id	        accounts	    mrr
+
+6.38	  30/09/20	  5000     	30000	
+2.97    31/08/20		10000	    29000	
+3.72    31/07/20	  6000     	27000	
+
+```
+
+## Note
+- The example output is actually not the real data.
+
 ## To do
