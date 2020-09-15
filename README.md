@@ -670,7 +670,206 @@ We simply sum group from total_addons_user and total_base_user and to define act
 Output
 ```
 total_base_user	 total_active_user	 total_addons_user	
-500              11,00               600
+500              11,00                      600
+```
+
+
+### Total monthly paid subscriptions, registered and trial canceled 
+We use the same way to perform the monthly query and $facet to have separate aggregation, but there is also $setUnion which performs set operation on arrays, treating arrays as sets. Basically, we gonna join the result from $facet and we don't want to have a duplicate date. $setUnion helps us to filters out duplicates in its result to output an array that contains only unique entries.  
+
+```
+{
+    "collection": "user_subscriptions",
+    "aggregate": [
+        {
+            "$facet": {
+                "total_signup": [
+                    {
+                        "$match": {
+                            "addonSubscriptions.0": {
+                                "$exists": false
+                            }
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$subscription.cstart"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$subscription.cstart"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "count_registered": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ],
+                "total_trial_canceled": [
+                    {
+                        "$match": {
+                            "addonSubscriptions.0": {
+                                "$exists": false
+                            }
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$subscription.cend"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$subscription.cend"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "count_trial_canceled": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ],
+                "total_subscribed": [
+                    {
+                        "$match": {
+                            "addonSubscriptions.0": {
+                                "$exists": true
+                            }
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$subscription.cstart"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$subscription.cstart"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "count_paid_susbscribed": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "$project": {
+                "activity": {
+                    "$setUnion": [
+                        "$total_signup",
+                        "$total_trial_canceled",
+                        "$total_subscribed"
+                    ]
+                }
+            }
+        },
+        {
+            "$unwind": "$activity"
+        },
+        {
+            "$group": {
+                "_id": "$activity._id",
+                "details": {
+                    "$push": "$$ROOT"
+                }
+            }
+        },
+        {
+            "$project": {
+                "registered": {
+                    "$arrayElemAt": [
+                        "$details.activity.count_registered",
+                        0
+                    ]
+                },
+                "paid_subscribed": {
+                    "$arrayElemAt": [
+                        "$details.activity.count_paid_susbscribed",
+                        0
+                    ]
+                },
+                "trial_canceled": {
+                    "$arrayElemAt": [
+                        "$details.activity.count_trial_canceled",
+                        0
+                    ]
+                }
+            }
+        },
+        {
+            "$sort": [
+                {
+                    "name": "_id",
+                    "direction": -1
+                }
+            ]
+        }
+    ]
+}
+```
+
+Sample Output
+```
+_id	          trial_canceled	registered	paid_subscribed	
+2020-10-31	    30		           200	        40 
+2020-09-30 	    40	             100	        10	
+...
 ```
 
 ## To do
