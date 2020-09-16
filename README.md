@@ -1,6 +1,8 @@
 ## Query cheatsheet redash.io mongodb for User Metrics
 
-First let's assume we have this data structure
+Redash is an open source SaaS application to query your data sources. This is a great choice if you wanted to make a first step for your company to have a Data Driven. It let you connect to any data source, easily visualize, dashboard and share your data. [read more](https://medium.com/@arikfr/the-journey-from-side-project-to-open-source-company-taking-the-first-step-8e8259ac80cb)
+
+First let's assume we have this documents and collections structure like this
 
 ```
 subscription_packages >
@@ -1867,6 +1869,7 @@ I have basically done with this queries but I will update it later when I have t
 - https://redash.io/help/data-sources/querying/mongodb
 - https://discuss.redash.io/
 - https://blog.redash.io/sql-query-to-calculate-saas-metrics/
+- https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/
 
 ## Contact me
 rahmat.ramadhaniriyanto@gmail.com
