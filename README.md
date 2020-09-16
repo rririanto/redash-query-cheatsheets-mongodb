@@ -13,14 +13,13 @@ subscription_packages >
 
 user_subscriptions >
   addonSubscriptions >
-    category
-    package
-    enabled
-    cstart
-    quantity
-    cend
-    unsubscribed
-
+      category
+      package
+      enabled
+      cstart
+      quantity
+      cend
+      unsubscribed
   _id	
   subscription.package
   subscription.enabled
@@ -1529,10 +1528,10 @@ monthly_active_trial_subscribe	_id	        monthly_signup	monthly_active_users	m
 Example output:
 
 ```
-arpu	  _id	          accounts	    mrr
+arpu	    _id	            accounts	    mrr
 
-6.38	  30/09/20	      5000          30000	
-2.97      31/08/20		  10000         29000	
+6.38	    30/09/20	      5000          30000	
+2.97      31/08/20		    10000         29000	
 3.72      31/07/20	      6000     	    27000	
 
 ```
