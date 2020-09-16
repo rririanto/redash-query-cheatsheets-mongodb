@@ -1,6 +1,6 @@
-## Query cheatsheet redash.io mongodb for User Metrics
+## Query cheatsheet redash.io MongoDB for User Metrics
 
-Redash is an open source SaaS application to query your data sources. This is a great choice if you wanted to make a first step for your company to have a Data Driven. It let you connect to any data source, easily visualize, dashboard and share your data. [read more](https://medium.com/@arikfr/the-journey-from-side-project-to-open-source-company-taking-the-first-step-8e8259ac80cb)
+Redash is an open-source SaaS application to query your data sources. This is a great choice if you wanted to make the first step for your company to have a Data-Driven. It let you connect to any data source, easily visualize, dashboard, and share your data.  [read more](https://medium.com/@arikfr/the-journey-from-side-project-to-open-source-company-taking-the-first-step-8e8259ac80cb)
 
 First let's assume we have this documents and collections structure like this
 
