@@ -53,6 +53,14 @@ To Sum the total user is quite simple, aggregates the data, and calculates the s
 }
 ```
 
+Example output
+
+```
+count   _id
+1000    null
+```
+
+
 #### Sum total user with $match filter
 We can also use a $match to filters the documents to pass only the documents that match the specified condition(s) to the next pipeline stage.
 ```
@@ -74,6 +82,14 @@ We can also use a $match to filters the documents to pass only the documents tha
         }
     ]
 }
+```
+
+
+Example output
+
+```
+count   _id
+700    null
 ```
 
 #### Sum total user with multiple $match filter
@@ -106,6 +122,14 @@ Not only one filter, you could also perform multiple filter by
     ]
 }
 
+```
+
+
+Example output
+
+```
+count   _id
+500    null
 ```
 
 #### Monthly signup
@@ -155,7 +179,9 @@ To show monthly sign up we need to aggregate and constructs a date to get the la
     ]
 }
 ```
-Output example
+
+
+Example output
 ```
 count   _id 
 5000	  30/09/20
@@ -222,6 +248,17 @@ We could also add $match filter to show data from data range
 }
 
 ```
+
+Example output
+```
+count   _id 
+5000	  30/09/20
+4000	  31/08/20	
+3000	  31/07/20	
+2000	  30/06/20	
+```
+
+
 
 ### Today and Yesterday Signup
 We can use $facet to create multi-faceted aggregations that characterize data across multiple dimensions within a single aggregation stage. So first we will aggregate today signup and yesterday signup then combine the data by adds new fields to documents using $addfield 
@@ -307,6 +344,13 @@ We can use $facet to create multi-faceted aggregations that characterize data ac
 }
 
 ```
+
+Example output
+```
+today_signup   yesterday_signup 
+98	              203	
+```
+
 ### Total subscriptions by category
 The subscription category is located on addonSubscriptions documents. To be able to get the exact documents we need to use $unwind, which is help us to deconstructs an array field from the input documents to output a document for each element. 
 ```
@@ -862,9 +906,6 @@ _id	          trial_canceled	registered	paid_subscribed
 ...
 ```
 
-### Trial to Buy Conversion %
-### To do
-
 ### Customer Acquisition Cost
 ```
 {
@@ -1212,8 +1253,8 @@ Example output
 ```
 monthly_active_trial_subscribe	_id	        monthly_signup	monthly_active_users	monthly_active_addons_user
 100	                            2020-09-30	500             1000	                1000
-2000	                        2020-08-31	5000	        10000	                11000
-1000	                        2020-07-31	6000	        7000	                4000
+2000	                          2020-08-31	5000	          10000	                11000
+1000	                          2020-07-31	6000	          7000	                4000
 ```
 
 ### ARPU: monthly include MRR
@@ -1536,7 +1577,296 @@ arpu	    _id	            accounts	    mrr
 
 ```
 
-## Note
-- The example output is actually not the real data.
+### Trial to Buy Conversion %
+```
+{
+    "collection": "user_subscriptions",
+    "aggregate": [
+        {
+            "$facet": {
+                "total_trial_canceled": [
+                    {
+                        "$match": {
+                            "subscription.package": {
+                                "$oid": "trial_123456789022222222"
+                            },
+                            "addonSubscriptions.0": {
+                                "$exists": false
+                            }
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$subscription.cend"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$subscription.cend"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "count_trial_canceled": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ],
+                "total_addons_canceled": [
+                    {
+                        "$match": {
+                            "addonSubscriptions.0": {
+                                "$exists": true
+                            }
+                        }
+                    },
+                    {
+                        "$unwind": {
+                            "path": "$addonSubscriptions",
+                            "preserveNullAndEmptyArrays": false
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$addonSubscriptions.cend"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$addonSubscriptions.cend"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "count_addons_canceled": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ],
+                "total_trial_subscribed": [
+                    {
+                        "$match": {
+                            "subscription.package": {
+                                "$oid": "trial_123456789022222222"
+                            },
+                            "addonSubscriptions.0": {
+                                "$exists": false
+                            }
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$subscription.cstart"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$subscription.cstart"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "count_trial_susbscribed": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ],
+                "total_paid_susbscribed_addons": [
+                    {
+                        "$match": {
+                            "addonSubscriptions.0": {
+                                "$exists": true
+                            }
+                        }
+                    },
+                    {
+                        "$unwind": {
+                            "path": "$addonSubscriptions",
+                            "preserveNullAndEmptyArrays": false
+                        }
+                    },
+                    {
+                        "$project": {
+                            "monthly": {
+                                "$subtract": [
+                                    {
+                                        "$dateFromParts": {
+                                            "year": {
+                                                "$year": "$addonSubscriptions.cstart"
+                                            },
+                                            "month": {
+                                                "$add": [
+                                                    {
+                                                        "$month": "$addonSubscriptions.cstart"
+                                                    },
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    86400000
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": "$monthly",
+                            "count_paid_susbscribed_addons": {
+                                "$sum": 1
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "$project": {
+                "activity": {
+                    "$setUnion": [
+                        "$total_trial_canceled",
+                        "$total_addons_canceled",
+                        "$total_trial_subscribed",
+                        "$total_paid_susbscribed_addons"
+                    ]
+                }
+            }
+        },
+        {
+            "$unwind": "$activity"
+        },
+        {
+            "$group": {
+                "_id": "$activity._id",
+                "details": {
+                    "$push": "$$ROOT"
+                }
+            }
+        },
+        {
+            "$project": {
+                "count_trial_susbscribed": "$details.activity.count_trial_susbscribed",
+                "count_paid_susbscribed_addons": "$details.activity.count_paid_susbscribed_addons",
+                "count_canceled": "$details.activity.count_trial_canceled",
+                "count_addons_canceled": "$details.activity.count_addons_canceled"
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "ttb": {
+                    "$divide": [
+                        {
+                            "$add": [
+                                {
+                                    "$arrayElemAt": [
+                                        "$count_trial_susbscribed",
+                                        0
+                                    ]
+                                },
+                                {
+                                    "$arrayElemAt": [
+                                        "$count_paid_susbscribed_addons",
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "$add": [
+                                {
+                                    "$arrayElemAt": [
+                                        "$count_canceled",
+                                        0
+                                    ]
+                                },
+                                {
+                                    "$arrayElemAt": [
+                                        "$count_addons_canceled",
+                                        0
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
+```
 
-## To do
+```
+ttb	   _id
+1.21	31/8/2020	
+0.97	31/7/2020	
+0.94	30/6/2020	
+
+```
+### TO DO 
+I have basically done with this queries but I will update it later when I have time to make some changes in order to protect my client's privacy.
+   - calculate MRR changes
+   - Calculate Churn
+   - Calculate Total per Month
+   - Join Everything and Calculate Net New MRR
+
+
+## Notes
+- If you discover the result of the number of calculations is not correct. Please note that the illustration output is not legitimate data. 
+- If you want to help me update the query, please fork and merge/pull request, I would love to collaborate.
+              
+## More about Redash.io
+- https://redash.io/help/data-sources/querying/mongodb
+- https://discuss.redash.io/
+- https://blog.redash.io/sql-query-to-calculate-saas-metrics/
+
+## Contact me
+rahmat.ramadhaniriyanto@gmail.com
